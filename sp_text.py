@@ -60,7 +60,7 @@ def speech_to_text(audio_path: str):
     """
     result = model.transcribe(
         audio_path,
-        language="en",
+        language="hi",
         task="translate"   # ensures English output always
     )
     text = result.get("text", "")
