@@ -54,13 +54,13 @@ whisper.audio.load_audio = load_audio
 import whisper
 model = whisper.load_model("large-v3-turbo")
 
-def speech_to_text(audio_path: str):
+def speech_to_text(audio_path: str,lang):
     """
     Converts audio to English text using Whisper.
     """
     result = model.transcribe(
         audio_path,
-        language="hi",
+        language=lang,
         task="translate"   # ensures English output always
     )
     text = result.get("text", "")

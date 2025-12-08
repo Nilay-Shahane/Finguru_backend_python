@@ -1,4 +1,6 @@
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi import BackgroundTasks
+
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from pymongo import MongoClient
@@ -10,6 +12,7 @@ from agents.sms_agent import data_creater
 from agents.db_agent_one import mongo_query_agent
 from db import save_tx
 from main_agent import run_agent_pipeline
+from agents.mongo_goal_inserter import process_and_insert_goal
 
 app = FastAPI(title="FinWell Agent API", version="1.0.0")
 
@@ -28,6 +31,8 @@ app.add_middleware(
 class AgentQuery(BaseModel):
     userId: str
     query: str
+    lang: str = "english"  # supports: "english", "hindi"
+
 
 @app.get('/')
 def root():
@@ -37,38 +42,47 @@ def root():
 @app.post("/api/speech_msg")
 async def speech_input(
     meta: str = Form(...),
-    audio: UploadFile = File(...)
+    audio: UploadFile = File(...),
+    lang: str = Form(...)   # "en" | "hi"
 ):
-    """
-    Handles speech-to-text input and processes transaction data.
-    """
     try:
-        # Parse incoming JSON metadata
+        # Parse metadata
         parsed = json.loads(meta)
         user_id = parsed["userId"]
         timestamp = parsed["timestamp"]
 
-        # Save audio temp file
+        # Save audio
         audio_bytes = await audio.read()
         temp_path = "temp_input_audio.mp3"
         with open(temp_path, "wb") as f:
             f.write(audio_bytes)
 
-        # Run Whisper speech-to-text
-        sms_text = speech_to_text(temp_path)
+        # Speech → Text (Hindi remains Hindi)
+        sms_text = speech_to_text(temp_path,lang)
 
-        # Run SMS agent to create data
-        result = data_creater(user_id, sms_text, timestamp)
-        print(f"SMS agent result type: {type(result)}")
-        
-        # Process with MongoDB query agent
+        # --- NEW: Force English data creation ---
+        result = data_creater(
+            user_id=user_id,
+            sms_text=sms_text,
+            timestamp=timestamp      # 👈 Force English always
+        )
+
+        # Query agent
         fin = mongo_query_agent(result)
-        
+
         # Save transaction
         response = await save_tx(fin)
-        print(f"Save transaction response: {response}")
-        
+
         return {'message': 'Success', 'data': response}
+
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Invalid JSON in meta field")
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error processing speech input: {str(e)}"
+        )
+
     
     except json.JSONDecodeError:
         raise HTTPException(status_code=400, detail="Invalid JSON in meta field")
@@ -79,17 +93,17 @@ async def speech_input(
         )
 
 @app.post("/query")
-def handle_query(body: AgentQuery):
+async def handle_query(body: AgentQuery,background_tasks: BackgroundTasks):
     """
     Handles user text query without any CSV input.
     Uses run_agent_pipeline(userId, query) and saves to MongoDB.
     """
     try:
         # Run agent pipeline
-        response = run_agent_pipeline(body.userId, body.query)
+        response = run_agent_pipeline(body.userId, body.query,body.lang)
 
         if response and isinstance(response, dict) and 'error' in response:
-            raise HTTPException(status_code=400, detail=response['error'])
+                raise HTTPException(status_code=400, detail=response['error'])
 
         # Save chat to MongoDB
         client = MongoClient("mongodb://localhost:27017/")
@@ -97,10 +111,17 @@ def handle_query(body: AgentQuery):
         db.chats.insert_one({
             "userId": body.userId,
             "query": body.query,
+            "lang":body.lang,
             "response": response,
             "timestamp": datetime.utcnow()
         })
-
+        background_tasks.add_task(
+            process_and_insert_goal,
+            body.userId,
+            body.query,
+            response,
+            body.lang
+        )
         return {"response": response}
 
     except Exception as e:

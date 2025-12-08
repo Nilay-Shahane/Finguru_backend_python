@@ -5,6 +5,8 @@ from agents.research_agent import create_research_agent
 from agents.decider_agent import deciding_agent
 from agents.planning_agent import planner
 from agents.investment_agent import investment_agent
+from agents.translation_agent import translate_to_hindi
+
 
 import pandas as pd
 import json
@@ -12,11 +14,12 @@ import traceback
 
 
 class FinWellAgent:
-    def __init__(self, userId,query):
+    def __init__(self, userId,query,lang):
         """
         Orchestrates all financial intelligence agents.
         """
         self.userId = userId
+        self.lang = lang
         self.query = query
         self.context = {}
         self.results = {}
@@ -123,7 +126,8 @@ class FinWellAgent:
             main_response = self.results["data_analysis"]
         else:
             main_response = "No valid output generated."
-
+        if self.lang=='hindi':
+            main_response=translate_to_hindi(main_response)
         return {
             "response": main_response,
             "visualization": None
@@ -145,13 +149,13 @@ class FinWellAgent:
 # ---------------------------------------------------------------
 # EXTERNAL API FUNCTION
 # ---------------------------------------------------------------
-def run_agent_pipeline(userId,query: str):
+def run_agent_pipeline(userId,query: str,lang):
     """
     Loads CSV and runs the FinWellAgent pipeline.
     """
     
 
-    pipeline = FinWellAgent(userId,query)
+    pipeline = FinWellAgent(userId,query,lang)
     return pipeline.run_pipeline()
 # ---------------------------------------------------------------
 # LOCAL TESTING (run: python main_agent.py)
