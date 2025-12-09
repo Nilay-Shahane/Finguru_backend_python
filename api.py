@@ -14,6 +14,7 @@ from db import save_tx
 from main_agent import run_agent_pipeline
 from agents.mongo_goal_inserter import process_and_insert_goal
 from agents.daily_saving_agent import daily_challenge
+from agents.notification import main_notifn
 
 app = FastAPI(title="FinWell Agent API", version="1.0.0")
 
@@ -136,5 +137,11 @@ from fastapi import Query
 @app.get("/api/daily_task")
 def daily_task(userId: str = Query(...)):
     resp = daily_challenge(userId)
+    return {"message": "Successful"}
+
+@app.get("/api/admin/notification")
+def create_notification(msg: str = Query(...)):
+
+    resp = main_notifn(msg)
     return {"message": "Successful"}
 
