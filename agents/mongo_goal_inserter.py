@@ -2,34 +2,38 @@
 
 import json
 from motor.motor_asyncio import AsyncIOMotorClient
-from agents.goal_agents import goal_agent
+from agents.goal_agents import goal_agent_cb
 
-client = AsyncIOMotorClient("mongodb://localhost:27017")
-db = client["finguru"]
-goals = db["goals"]
+client = AsyncIOMotorClient("mongodb+srv://mumbaihacks:mumbaihacks@cluster0.fonvcex.mongodb.net/")
+db = client["test"]
+goals = db["savingsjars"]
 
 
 async def process_and_insert_goal(userId: str, query: str, response: str, lang: str):
-    """
-    1. Run goal agent → produces single-line Mongo JSON
-    2. Clean parentheses
-    3. Convert to dict
-    4. Insert async
-    """
 
-    mongo_json_line = goal_agent(userId, query, response, lang)
+    mongo_json = goal_agent_cb(userId, query, response, lang)
 
-    if not mongo_json_line:
-        print("No goal detected → skipping goal insert.")
+    # Case 1: LLM returns None or empty
+    if not mongo_json:
+        print("Goal Agent returned nothing → skipping insert.")
         return None
 
-    clean = mongo_json_line.strip()
+    mongo_json = mongo_json.strip()
 
-    if clean.startswith("(") and clean.endswith(")"):
-        clean = clean[1:-1]
+    # Step 1 — Parse JSON safely
+    try:
+        parsed = json.loads(mongo_json)
+    except json.JSONDecodeError:
+        print("Invalid JSON returned by LLM:", mongo_json)
+        return None
 
-    goal_dict = json.loads(clean)
+    # Step 2 — Detect "no goal" case
+    if parsed.get("is_goal") is False:
+        print("Goal Agent: No goal detected → skipping insert.")
+        return None
 
-    result = await goals.insert_one(goal_dict)
+    # Step 3 — This is a real goal → insert it
+    result = await goals.insert_one(parsed)
     print("Inserted Goal ID:", result.inserted_id)
+
     return result.inserted_id

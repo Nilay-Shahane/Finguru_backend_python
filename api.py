@@ -13,6 +13,7 @@ from agents.db_agent_one import mongo_query_agent
 from db import save_tx
 from main_agent import run_agent_pipeline
 from agents.mongo_goal_inserter import process_and_insert_goal
+from agents.daily_saving_agent import daily_challenge
 
 app = FastAPI(title="FinWell Agent API", version="1.0.0")
 
@@ -53,7 +54,7 @@ async def speech_input(
 
         # Save audio
         audio_bytes = await audio.read()
-        temp_path = "temp_input_audio.mp3"
+        temp_path = "temp_input_audio.m4a"
         with open(temp_path, "wb") as f:
             f.write(audio_bytes)
 
@@ -129,3 +130,11 @@ async def handle_query(body: AgentQuery,background_tasks: BackgroundTasks):
             status_code=500,
             detail=f"An internal server error occurred: {str(e)}"
         )
+    
+from fastapi import Query
+
+@app.get("/api/daily_task")
+def daily_task(userId: str = Query(...)):
+    resp = daily_challenge(userId)
+    return {"message": "Successful"}
+
