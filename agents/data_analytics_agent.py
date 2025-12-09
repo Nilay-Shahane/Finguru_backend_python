@@ -13,8 +13,8 @@ def create_data_analysis_agent(user_id: str):
     # ----------------------------
     # 1) Connect to MongoDB
     # ----------------------------
-    client = MongoClient("mongodb://localhost:27017/")
-    db = client["finguru"]
+    client = MongoClient("mongodb+srv://mumbaihacks:mumbaihacks@cluster0.fonvcex.mongodb.net/")
+    db = client["test"]
     analytics = db.useranalytics.find_one({"userId": user_id})
 
     if not analytics:
@@ -34,9 +34,9 @@ def create_data_analysis_agent(user_id: str):
     Simply extract facts, trends, and numeric insights.
 
     IMPORTANT MONEY RULE:
-    - All monetary values in the UserAnalytics document are stored in **paise**.
-    - Before reporting any number, ALWAYS divide it by **100**.
-    - Output all final monetary values in **₹ (rupees)**.
+    - All monetary values in the UserAnalytics document are stored in *paise*.
+    - Before reporting any number, ALWAYS divide it by *100*.
+    - Output all final monetary values in *₹ (rupees)*.
     - Never show paise values.
 
     Use ONLY the data inside the 'UserAnalytics' document.
@@ -47,7 +47,7 @@ def create_data_analysis_agent(user_id: str):
     - Use ₹ for all currency formatting.
     - Focus only on: income, expenses, savings, top categories, and monthly trends.
     - Provide clean rupee-denominated numbers that downstream agents will use.
-    - End with: **Final Answer:** followed by your factual summary.
+    - End with: *Final Answer:* followed by your factual summary.
 
     — USER ANALYTICS DATA START —
     {analytics_json}

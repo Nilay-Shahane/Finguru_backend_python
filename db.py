@@ -1,12 +1,12 @@
 from motor.motor_asyncio import AsyncIOMotorClient
 import json
 
-MONGO_URL = "mongodb://localhost:27017"
+MONGO_URL = "mongodb+srv://mumbaihacks:mumbaihacks@cluster0.fonvcex.mongodb.net/"
 
 client = AsyncIOMotorClient(MONGO_URL)
-db = client["finguru"]
+db = client["test"]
 transactions = db["transactions"]
-notifications = db["notification"]
+notifications = db["notifications"]
 
 
 async def save_tx(transaction):
