@@ -15,6 +15,8 @@ from main_agent import run_agent_pipeline
 from agents.mongo_goal_inserter import process_and_insert_goal
 from agents.weeklybudget_updater import update_weekly_budget_analysis
 from agents.weeklybudget_generator import create_next_week_budget
+from agents.daily_saving_agent import daily_challenge
+from agents.notification import main_notifn
 
 app = FastAPI(title="FinWell Agent API", version="1.0.0")
 
@@ -53,11 +55,11 @@ def root():
 #         user_id = parsed["userId"]
 #         timestamp = parsed["timestamp"]
 
-#         # Save audio
-#         audio_bytes = await audio.read()
-#         temp_path = "temp_input_audio.mp3"
-#         with open(temp_path, "wb") as f:
-#             f.write(audio_bytes)
+        # Save audio
+    # audio_bytes = await audio.read()
+    # temp_path = "temp_input_audio.m4a"
+    # with open(temp_path, "wb") as f:
+    # f.write(audio_bytes)
 
 #         # Speech → Text (Hindi remains Hindi)
 #         sms_text = speech_to_text(temp_path,lang)
@@ -196,3 +198,17 @@ async def create_next_weekly_budget(body: WeeklyBudgetRequest):
             status_code=500,
             detail=f"Error creating next week's budget: {str(e)}"
         )
+    
+from fastapi import Query
+
+@app.get("/api/daily_task")
+def daily_task(userId: str = Query(...)):
+    resp = daily_challenge(userId)
+    return {"message": "Successful"}
+
+@app.get("/api/admin/notification")
+def create_notification(msg: str = Query(...)):
+
+    resp = main_notifn(msg)
+    return {"message": "Successful"}
+
