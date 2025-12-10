@@ -33,10 +33,10 @@ Return ONLY a valid JSON object with fields:
 - monthly_summ_head
 - monthly_summ_content
 - earning_head
-- earning_content
+- earning_content (2-3 lines , point wise)
 - spike_header
 - spike_content
-- smart_header
+- smart_header    ((2-3 lines , point wise))
 - smart_content
 
 all content are in paise , convert them in rs by /100
@@ -86,4 +86,4 @@ all content are in paise , convert them in rs by /100
     return story_json
 
 if __name__ == "__main__":
-    asyncio.run(ai_story("usr_rahul_001", 11))
+    asyncio.run(ai_story("usr_rahul_001", 10))
