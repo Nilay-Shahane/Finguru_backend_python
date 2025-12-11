@@ -110,7 +110,7 @@ async def speech_input(
 @app.post("/query")
 async def handle_query(body: AgentQuery, background_tasks: BackgroundTasks):
     try:
-        response = run_agent_pipeline(body.userId, body.query, body.lang)
+        response =await run_agent_pipeline(body.userId, body.query, body.lang)
 
         if isinstance(response, dict) and "error" in response:
             raise HTTPException(status_code=400, detail=response["error"])
