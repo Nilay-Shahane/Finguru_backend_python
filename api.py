@@ -56,17 +56,18 @@ async def speech_input(
     try:
         parsed = json.loads(meta)
         user_id = parsed["userId"]
-        timestamp = parsed["timestamp"]
-
+        timestamp = str(parsed["timestamp"])
+        print(user_id)
         # Save uploaded audio
         audio_bytes = await audio.read()
         temp_path = "temp_input_audio.m4a"
-
+        
         with open(temp_path, "wb") as f:
             f.write(audio_bytes)
 
         # Speech → Text (COMMENTED OUT BECAUSE OF WHISPER ISSUE)
         sms_text = speech_to_text(temp_path, lang)
+        print(sms_text)
 
         # Parse transaction
         result = data_creater(
@@ -74,12 +75,16 @@ async def speech_input(
             sms_text=sms_text,
             timestamp=timestamp
         )
+        print(result)
 
         # Run query agent
         fin = mongo_query_agent(result)
+        print(fin)
 
         # Save to MongoDB
         response = await save_tx(fin)
+        print(response)
+
 
         return {"message": "Success", "data": response}
 
