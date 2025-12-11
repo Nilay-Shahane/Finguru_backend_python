@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADMIN Notifications</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', sans-serif;
+            background: #0a0e1a;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: #1a1f2e;
+            padding: 48px;
+            border-radius: 12px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+            border: 1px solid #2d3548;
+        }
+
+        .header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 2px solid #2d3548;
+        }
+
+        .header-top {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        .icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        h2 {
+            color: #f8fafc;
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-left: 64px;
+        }
+
+        .form-group {
+            margin-bottom: 28px;
+        }
+
+        label {
+            display: block;
+            color: #e2e8f0;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 8px;
+            border: 1.5px solid #3d4557;
+            font-size: 15px;
+            font-family: inherit;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            resize: vertical;
+            min-height: 140px;
+            background: #0f1419;
+            color: #f8fafc;
+            line-height: 1.6;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+        }
+
+        textarea::placeholder {
+            color: #64748b;
+        }
+
+        .char-count {
+            text-align: right;
+            font-size: 13px;
+            color: #94a3b8;
+            margin-top: 8px;
+        }
+
+        .char-count span {
+            color: #cbd5e1;
+            font-weight: 600;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            cursor: pointer;
+            border: none;
+            padding: 14px 24px;
+            width: 100%;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button:disabled {
+            background: #4a5568;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        #output {
+            margin-top: 24px;
+            padding: 16px 18px;
+            border-radius: 8px;
+            display: none;
+            white-space: pre-wrap;
+            font-size: 14px;
+            line-height: 1.6;
+            font-family: 'Monaco', 'Courier New', monospace;
+        }
+
+        #output.success {
+            background: #0d2818;
+            border: 1.5px solid #16a34a;
+            color: #86efac;
+        }
+
+        #output.error {
+            background: #2d1214;
+            border: 1.5px solid #dc2626;
+            color: #fca5a5;
+        }
+
+        #output.loading {
+            background: #0f1c2e;
+            border: 1.5px solid #667eea;
+            color: #a5b4fc;
+        }
+
+        .status-icon {
+            display: inline-block;
+            margin-right: 6px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 32px 24px;
+            }
+
+            h2 {
+                font-size: 20px;
+            }
+
+            .header-top {
+                gap: 12px;
+            }
+
+            .icon {
+                width: 40px;
+                height: 40px;
+                font-size: 20px;
+            }
+
+            .subtitle {
+                margin-left: 52px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div class="header-top">
+            <div class="icon">📢</div>
+            <h2>FinGuru Admin Panel</h2>
+        </div>
+        <p class="subtitle">Send push notifications to all registered users</p>
+    </div>
+
+    <div class="form-group">
+        <label for="msg">Notification Message</label>
+        <textarea id="msg" rows="4" placeholder="Enter your notification message..." maxlength="500"></textarea>
+        <div class="char-count"><span id="count">0</span> / 500 characters</div>
+    </div>
+
+    <button onclick="sendNotification()">Send Notification</button>
+
+    <div id="output"></div>
+</div>
+
+<script>
+    const msgInput = document.getElementById("msg");
+    const countSpan = document.getElementById("count");
+
+    msgInput.addEventListener("input", () => {
+        countSpan.textContent = msgInput.value.length;
+    });
+
+    async function sendNotification() {
+        const output = document.getElementById("output");
+        const btn = document.querySelector("button");
+
+        output.style.display = "block";
+        output.className = "loading";
+
+        const msg = msgInput.value.trim();
+        if (!msg) {
+            output.className = "error";
+            output.innerHTML = '<span class="status-icon">⚠️</span>Please enter a message before sending.';
+            return;
+        }
+
+        btn.disabled = true;
+        output.innerHTML = '<span class="status-icon">⏳</span>Sending notification... Please wait.';
+
+        try {
+            const url = `http://localhost:8000/api/admin/notification?msg=${encodeURIComponent(msg)}`;
+            
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (response.ok) {
+                output.className = "success";
+                output.innerHTML =
+                    '<span class="status-icon">✅</span>Notification sent successfully!\n\n' +
+                    JSON.stringify(data, null, 2);
+
+                msgInput.value = "";
+                countSpan.textContent = "0";
+            } else {
+                output.className = "error";
+                output.innerHTML = '<span class="status-icon">❌</span>Error: ' + (data.detail || "Unknown error");
+            }
+
+        } catch (err) {
+            output.className = "error";
+            output.innerHTML = '<span class="status-icon">❌</span>Request failed: ' + err.message;
+        } finally {
+            btn.disabled = false;
+        }
+    }
+</script>
+
+</body>
+</html>
